@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import React from 'react';
 import {
   View,
   TextInput,
@@ -11,44 +11,22 @@ import {
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
-  withSpring,
-  withTiming,
-  withSequence,
-  runOnJS,
 } from 'react-native-reanimated';
-import {mix} from 'react-native-redash';
+
+import LeftIcon from './LeftIcon';
 
 function WhatsApp() {
-  const [recordAudio, setRecordAudio] = useState(false);
-
+  const recordAudio = useSharedValue(false);
   const animatedValue = useSharedValue(0);
 
-  const updateState = () => {
-    console.log('it stop');
-    setTimeout(() => {
-      setRecordAudio(false);
-    }, 2000);
-  };
+  const textInputStyle = useAnimatedStyle(() => ({
+    display: recordAudio.value ? 'none' : 'flex',
+  }));
 
-  const micStyle = useAnimatedStyle(() => {
+  const cancelTextStyle = useAnimatedStyle(() => {
+    const display = recordAudio.value ? 'flex' : 'none';
     return {
-      transform: [
-        {
-          translateY: withSequence(
-            withTiming(animatedValue.value * -100),
-            withTiming(animatedValue.value * 0),
-          ),
-        },
-        {
-          rotate: withSpring(`${animatedValue.value * 360}deg`),
-        },
-        {
-          scale: withSequence(
-            withTiming(mix(animatedValue.value, 1, 1.5)),
-            withTiming(mix(animatedValue.value, 1.5, 1)),
-          ),
-        },
-      ],
+      display,
     };
   });
 
@@ -56,39 +34,34 @@ function WhatsApp() {
     <View style={styles.container}>
       <View style={styles.bottomMessageInput}>
         <View style={styles.textInputContainer}>
-          {recordAudio ? (
-            <Animated.Image
-              source={require('../../../res/img/microphone.png')}
-              style={[styles.leftIcon, {tintColor: '#d63343'}, micStyle]}
-            />
-          ) : (
-            <Image
-              source={require('../../../res/img/smilyFace.png')}
-              style={styles.leftIcon}
-            />
-          )}
+          <LeftIcon animatedValue={animatedValue} isRecording={recordAudio} />
+
           <View style={styles.textInputWrapper}>
-            {recordAudio ? (
+            <Animated.View style={cancelTextStyle}>
               <TouchableOpacity
-                onPress={() => (animatedValue.value = 1)}
+                onPress={() => {
+                  animatedValue.value = 1;
+                }}
                 style={styles.cancelTextWrapper}>
                 <Text style={styles.cancelText}>CANCEL</Text>
               </TouchableOpacity>
-            ) : (
+            </Animated.View>
+
+            <Animated.View style={textInputStyle}>
               <TextInput
                 style={styles.input}
                 placeholder="Type a message"
                 placeholderTextColor="#656566"
               />
-            )}
+            </Animated.View>
           </View>
         </View>
         <TouchableOpacity
-          onPress={() => setRecordAudio(true)}
+          onPress={() => (recordAudio.value = true)}
           style={styles.button}>
           <Image
             style={styles.sendIcon}
-            source={require('../../../res/img/microphone.png')}
+            source={require('../../../../res/img/microphone.png')}
           />
         </TouchableOpacity>
       </View>
@@ -116,12 +89,6 @@ const styles = StyleSheet.create({
     height: 45,
     alignItems: 'center',
     borderRadius: 100,
-  },
-  leftIcon: {
-    width: 30,
-    height: 30,
-    marginHorizontal: 5,
-    tintColor: '#656566',
   },
   button: {
     backgroundColor: '#02d7ff',
