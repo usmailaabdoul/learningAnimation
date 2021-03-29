@@ -7,21 +7,41 @@ import {
   ScrollView,
   StyleSheet,
   Dimensions,
+  PixelRatio,
 } from 'react-native';
 import Animated, {
   useSharedValue,
   useAnimatedRef,
+  useAnimatedScrollHandler,
+  interpolate,
+  Extrapolate,
+  useAnimatedStyle,
+  useDerivedValue,
+  multiply,
 } from 'react-native-reanimated';
+import {} from 'react-native-redash';
+import Svg, {Circle, G} from 'react-native-svg';
 
 import {ONBOARDING} from './constants';
 
 const WIDTH = Dimensions.get('window').width;
 const HEIGHT = Dimensions.get('window').height;
 
+const {PI} = Math;
+const AnimatedCircle = Animated.createAnimatedComponent(Circle);
+
 const Onboarding = () => {
-  const animatedValue = useSharedValue(0);
+  const x = useSharedValue(0);
   const scrollRef = useAnimatedRef();
-  // const onScroll = onScr
+
+  const scrollHandler = useAnimatedScrollHandler(event => {
+    x.value = event.contentOffset.x;
+  });
+
+  const currentIndex = useDerivedValue(() => {
+    return x.value / WIDTH;
+  }, [x.value]);
+
   return (
     <View style={styles.container}>
       <View style={styles.slider}>
@@ -32,28 +52,26 @@ const Onboarding = () => {
           horizontal
           showsHorizontalScrollIndicator={false}
           snapToInterval={WIDTH}
-          scrollEventThrottle={16}
-          // {...{onScroll}}
-        >
+          onScroll={scrollHandler}>
           {ONBOARDING.map((onboarding, index) => {
             return <OnboardingCard key={index} onboarding={onboarding} />;
           })}
         </Animated.ScrollView>
       </View>
-      <View style={styles.footer}>
+      <Animated.View style={styles.footer}>
         <Footer
           onboardings={ONBOARDING}
+          {...{currentIndex, x}}
           onPress={() => {
-            console.log(scrollRef.current);
             if (scrollRef.current) {
               scrollRef.current.scrollTo({
-                x: WIDTH * (animatedValue.value + 1),
+                x: WIDTH * (x.value / WIDTH + 1),
                 animated: true,
               });
             }
           }}
         />
-      </View>
+      </Animated.View>
     </View>
   );
 };
@@ -72,19 +90,105 @@ const OnboardingCard = ({onboarding}) => {
   );
 };
 
-const Footer = ({onboardings, onPress}) => {
+const Footer = ({onboardings, onPress, x, currentIndex}) => {
+  const size = WIDTH - 32;
+  const STROKE_WIDTH = 5;
+  const r = PixelRatio.roundToNearestPixel(size / 5.5);
+
   return (
     <>
-      <View style={styles.footerWrapper}>
-        {onboardings.map((_, index) => (
-          <View key={index} style={styles.pagination} />
-        ))}
+      <Animated.View style={styles.footerWrapper}>
+        {onboardings.map((_, index) => {
+          console.log({x});
+          return <Dot key={index} {...{index, currentIndex}} />;
+        })}
+      </Animated.View>
+      <View style={styles.svgWrapper}>
+        <View style={{width: r * 2, height: r * 2}}>
+          <Animated.View style={StyleSheet.absoluteFill}>
+            <CircularProgress
+              strokeWidth={STROKE_WIDTH}
+              color="#d3368a"
+              {...{r, currentIndex}}
+            />
+          </Animated.View>
+        </View>
       </View>
-
-      <TouchableOpacity onPress={() => onPress()} style={styles.footerBtn}>
-        <Text>next</Text>
+      <TouchableOpacity
+        onPress={() => onPress()}
+        style={[StyleSheet.absoluteFillObject, styles.footerBtn]}>
+        <Image
+          source={require('../../../res/img/arrow.png')}
+          style={styles.btnImg}
+        />
       </TouchableOpacity>
     </>
+  );
+};
+
+const Dot = ({index, currentIndex}) => {
+  const style = useAnimatedStyle(() => {
+    const opacity = interpolate(
+      currentIndex.value,
+      [index - 1, index, index + 1],
+      [0.5, 1, 0.5],
+      Extrapolate.CLAMP,
+    );
+    const scale = interpolate(
+      currentIndex.value,
+      [index - 1, index, index + 1],
+      [1, 1.25, 1],
+      Extrapolate.CLAMP,
+    );
+    const width = interpolate(
+      currentIndex.value,
+      [index - 1, index, index + 1],
+      [8, 15, 8],
+      Extrapolate.CLAMP,
+    );
+
+    return {
+      opacity,
+      transform: [{scale}],
+      width,
+    };
+  });
+
+  return <Animated.View key={index} style={[styles.pagination, style]} />;
+};
+
+const CircularProgress = ({currentIndex, r, color, strokeWidth}) => {
+  const radius = r - strokeWidth / 2;
+  const theta = useDerivedValue(() => {
+    console.log('number', (currentIndex.value / 33.33) * 10);
+    return (currentIndex.value / 33.33) * 10 * radius;
+  }, [currentIndex.value]);
+
+  const strokeDashoffset = multiply(0.7, radius);
+  const circumference = radius * 2 * PI;
+  return (
+    <Svg style={StyleSheet.absoluteFill}>
+      <Circle
+        cx={r}
+        cy={r}
+        fill="transparent"
+        stroke={color}
+        strokeOpacity={0.2}
+        r={radius}
+        {...{strokeWidth}}
+      />
+      <AnimatedCircle
+        cx={r}
+        cy={r}
+        fill="transparent"
+        stroke={color}
+        r={radius}
+        strokeDasharray={`${circumference}, ${circumference}`}
+        {...{strokeWidth}}
+        strokeDashoffset={strokeDashoffset}
+        strokeLinecap="round"
+      />
+    </Svg>
   );
 };
 
@@ -128,14 +232,14 @@ const styles = StyleSheet.create({
     marginHorizontal: 10,
   },
   pagination: {
-    width: 7,
     height: 7,
-    backgroundColor: '#a5a5ad',
+    backgroundColor: '#d3368a',
     margin: 5,
     marginBottom: '10%',
     borderRadius: 10,
   },
   footerWrapper: {
+    flex: 0.62,
     justifyContent: 'center',
     alignItems: 'center',
     flexDirection: 'row',
@@ -147,5 +251,18 @@ const styles = StyleSheet.create({
     backgroundColor: '#d3368a',
     alignItems: 'center',
     justifyContent: 'center',
+    top: '55%',
+    left: '39.5%',
+  },
+  svgWrapper: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    transform: [{rotate: '-90deg'}],
+  },
+  btnImg: {
+    width: 40,
+    height: 40,
+    tintColor: '#fff',
   },
 });
