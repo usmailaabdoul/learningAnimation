@@ -9,7 +9,7 @@
 import React from 'react';
 import {SafeAreaView} from 'react-native';
 
-import {Button, Intro, WhatsApp, Onboarding} from './screens';
+import {Button, Intro, WhatsApp, Onboarding, GmailSwipe} from './screens';
 
 const App = () => {
   return (
@@ -17,7 +17,7 @@ const App = () => {
       {/* <Button />
       <Intro />
       <WhatsApp /> */}
-      <Onboarding />
+      <GmailSwipe />
     </SafeAreaView>
   );
 };
