@@ -18,6 +18,8 @@ import Animated, {
   useAnimatedStyle,
   useDerivedValue,
   multiply,
+  runOnJS,
+  useAnimatedProps,
 } from 'react-native-reanimated';
 import {} from 'react-native-redash';
 import Svg, {Circle, G} from 'react-native-svg';
@@ -94,6 +96,15 @@ const Footer = ({onboardings, onPress, x, currentIndex}) => {
   const size = WIDTH - 32;
   const STROKE_WIDTH = 5;
   const r = PixelRatio.roundToNearestPixel(size / 5.5);
+  const theta = useSharedValue(2);
+
+  let increment = 2 / ONBOARDING.length;
+
+  useDerivedValue(() => {
+    let val = 2 - increment * currentIndex.value;
+
+    theta.value = val * Math.PI;
+  }, [currentIndex.value]);
 
   return (
     <>
@@ -109,7 +120,7 @@ const Footer = ({onboardings, onPress, x, currentIndex}) => {
             <CircularProgress
               strokeWidth={STROKE_WIDTH}
               color="#d3368a"
-              {...{r, currentIndex}}
+              {...{r, currentIndex, theta}}
             />
           </Animated.View>
         </View>
@@ -157,37 +168,46 @@ const Dot = ({index, currentIndex}) => {
   return <Animated.View key={index} style={[styles.pagination, style]} />;
 };
 
-const CircularProgress = ({currentIndex, r, color, strokeWidth}) => {
+const CircularProgress = ({currentIndex, r, color, strokeWidth, theta}) => {
   const radius = r - strokeWidth / 2;
-  const theta = useDerivedValue(() => {
-    console.log('number', (currentIndex.value / 33.33) * 10);
-    return (currentIndex.value / 33.33) * 10 * radius;
-  }, [currentIndex.value]);
+  const offset = useSharedValue(2);
 
-  const strokeDashoffset = multiply(0.7, radius);
+  const Console = val => {
+    return console.log('offsets', val);
+  };
+
+  useDerivedValue(() => {
+    runOnJS(Console)(theta.value);
+    offset.value = theta.value;
+  }, [theta.value]);
+
+  const strokeDashoffset = multiply(offset.value, radius);
   const circumference = radius * 2 * PI;
+
   return (
     <Svg style={StyleSheet.absoluteFill}>
-      <Circle
-        cx={r}
-        cy={r}
-        fill="transparent"
-        stroke={color}
-        strokeOpacity={0.2}
-        r={radius}
-        {...{strokeWidth}}
-      />
-      <AnimatedCircle
-        cx={r}
-        cy={r}
-        fill="transparent"
-        stroke={color}
-        r={radius}
-        strokeDasharray={`${circumference}, ${circumference}`}
-        {...{strokeWidth}}
-        strokeDashoffset={strokeDashoffset}
-        strokeLinecap="round"
-      />
+      <G>
+        <Circle
+          cx={r}
+          cy={r}
+          fill="transparent"
+          stroke={color}
+          strokeOpacity={0.2}
+          r={radius}
+          {...{strokeWidth}}
+        />
+        <AnimatedCircle
+          cx={r}
+          cy={r}
+          fill="transparent"
+          stroke={color}
+          r={radius}
+          strokeDasharray={`${circumference}, ${circumference}`}
+          {...{strokeWidth}}
+          strokeDashoffset={strokeDashoffset}
+          strokeLinecap="round"
+        />
+      </G>
     </Svg>
   );
 };

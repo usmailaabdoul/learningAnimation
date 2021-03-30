@@ -104,7 +104,7 @@ const TrashIcon = ({trashIcons, translateValue}) => {
     if (translateValue.value === -100) {
       animate.value = 1;
     }
-  }, [translateValue]);
+  }, [translateValue.value]);
 
   const animatedStyles = useAnimatedStyle(() => {
     return {

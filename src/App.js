@@ -14,10 +14,10 @@ import {Button, Intro, WhatsApp, Onboarding, GmailSwipe} from './screens';
 const App = () => {
   return (
     <SafeAreaView style={{flex: 1}}>
-      {/* <Button />
-      <Intro />
-      <WhatsApp /> */}
-      <GmailSwipe />
+      {/* <Button /> */}
+      {/* <Intro /> */}
+      {/* <WhatsApp /> */}
+      <Onboarding />
     </SafeAreaView>
   );
 };
