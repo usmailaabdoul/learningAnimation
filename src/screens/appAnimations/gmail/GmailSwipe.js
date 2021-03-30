@@ -1,5 +1,5 @@
-import React from 'react';
-import {StyleSheet, Text, View, Dimensions} from 'react-native';
+import React, {useState} from 'react';
+import {StyleSheet, Text, View, Dimensions, Alert} from 'react-native';
 
 import {EMAILS} from './constants';
 import SwipableRow from './SwipableRow';
@@ -8,12 +8,40 @@ const width = Dimensions.get('window').width;
 const height = Dimensions.get('window').height;
 
 const GmailSwipe = () => {
+  const [emails, setEmails] = useState(EMAILS);
+
   return (
     <View style={styles.container}>
-      <Text>Gmail header</Text>
+      <View style={styles.header}>
+        <Text style={styles.headerText}>Gmail</Text>
+      </View>
 
-      {EMAILS.map((email, index) => (
-        <Card key={index} email={email} />
+      {emails.map((email, index) => (
+        <Card
+          key={email.id}
+          email={email}
+          onDelete={() => {
+            emails.splice(index, 1);
+            setEmails(emails.concat());
+          }}
+          archive={() =>
+            Alert.alert(
+              'Archive',
+              'Are you sure u want to archive email',
+              [
+                {
+                  text: 'Ok',
+                  onPress: () => {
+                    emails.splice(index, 1);
+                    setEmails(emails.concat());
+                  },
+                },
+                {text: 'Cancel', style: 'cancel'},
+              ],
+              {cancelable: true},
+            )
+          }
+        />
       ))}
     </View>
   );
@@ -21,14 +49,14 @@ const GmailSwipe = () => {
 
 export default GmailSwipe;
 
-const Card = ({email}) => {
+const Card = ({email, onDelete, archive}) => {
   const getFirstLetter = letter => {
     let firstLetter = letter.split('')[0];
     return firstLetter;
   };
 
   return (
-    <SwipableRow>
+    <SwipableRow onDelete={onDelete} archive={archive}>
       <View style={styles.card}>
         <View style={styles.cardWrapper}>
           <View
@@ -57,6 +85,15 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: 'white',
+  },
+  header: {
+    backgroundColor: '#28a745',
+  },
+  headerText: {
+    fontSize: 20,
+    marginVertical: 15,
+    color: 'white',
+    textAlign: 'center',
   },
   card: {
     width: width,
