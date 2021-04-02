@@ -9,15 +9,19 @@
 import React from 'react';
 import {SafeAreaView} from 'react-native';
 
-import {Button, Intro, WhatsApp, Onboarding, GmailSwipe} from './screens';
+import {
+  Button,
+  Intro,
+  WhatsApp,
+  Onboarding,
+  GmailSwipe,
+  Carousel,
+} from './screens';
 
 const App = () => {
   return (
     <SafeAreaView style={{flex: 1}}>
-      {/* <Button /> */}
-      {/* <Intro /> */}
-      {/* <WhatsApp /> */}
-      <Onboarding />
+      <Carousel />
     </SafeAreaView>
   );
 };

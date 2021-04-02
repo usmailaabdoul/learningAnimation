@@ -177,7 +177,7 @@ const CircularProgress = ({currentIndex, r, color, strokeWidth, theta}) => {
   };
 
   useDerivedValue(() => {
-    runOnJS(Console)(theta.value);
+    // runOnJS(Console)(theta.value);
     offset.value = theta.value;
   }, [theta.value]);
 
