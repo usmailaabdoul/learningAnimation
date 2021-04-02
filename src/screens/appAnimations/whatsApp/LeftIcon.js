@@ -21,17 +21,11 @@ const TrashIcons = [
 ];
 
 const LeftIcon = ({animatedValue, isRecording}) => {
-  const translateValue = useDerivedValue(() => {
-    // return animatedValue.value * -100;
-    return interpolate(animatedValue.value, [0, 1], [0, -100]);
-  });
-
   const micStyle = useAnimatedStyle(() => {
-    console.log({translateValue});
     const transform = [
       {
         translateY: withSequence(
-          withTiming(translateValue.value),
+          withTiming(animatedValue.value * -100),
           withTiming(animatedValue.value * 0),
         ),
       },
@@ -76,7 +70,17 @@ const LeftIcon = ({animatedValue, isRecording}) => {
         source={require('../../../../res/img/smilyFace.png')}
         style={[styles.leftIcon, smilyStyle]}
       />
-      <TrashIcon trashIcons={TrashIcons} translateValue={translateValue} />
+      <View style={[{...StyleSheet.absoluteFillObject}, {}]}>
+        {TrashIcons.map((icon, index) => (
+          <TrashIcon
+            key={index}
+            index={index}
+            icon={icon}
+            animatedValue={animatedValue}
+          />
+        ))}
+      </View>
+      {/* <TrashIcon trashIcons={TrashIcons} translateValue={translateY} /> */}
     </View>
   );
 };
@@ -92,45 +96,29 @@ const styles = StyleSheet.create({
   },
 });
 
-const TrashIcon = ({trashIcons, translateValue}) => {
-  const animate = useSharedValue(0);
-
-  const Console = val => {
-    return console.log('starting trash', val);
-  };
+const TrashIcon = ({icon, animatedValue, index}) => {
+  const animateTrash = useSharedValue(0);
 
   useDerivedValue(() => {
-    runOnJS(Console)(translateValue.value);
-    if (translateValue.value === -100) {
-      animate.value = 1;
+    if (animatedValue.value === 1) {
+      animateTrash.value = 1;
     }
-  }, [translateValue.value]);
+  }, [animatedValue.value]);
 
-  const animatedStyles = useAnimatedStyle(() => {
+  const style = useAnimatedStyle(() => {
+    const opacity = interpolate(
+      animateTrash.value,
+      [0.5, 0.7, 1],
+      [1, 1, 1],
+      Extrapolate.CLAMP,
+    );
     return {
-      display: animate.value === 1 ? 'flex' : 'none',
+      opacity,
     };
   });
-
-  const trashStyle = useAnimatedStyle(() => {
-    return {
-      transform: [
-        {
-          translateY: withSequence(
-            withTiming(animate.value * -20),
-            withTiming(animate.value * 30),
-          ),
-        },
-      ],
-    };
-  });
-
   return (
-    <Animated.View style={animatedStyles}>
-      <Animated.Image
-        source={trashIcons[0].path}
-        style={[styles.leftIcon, trashStyle]}
-      />
+    <Animated.View style={[{...StyleSheet.absoluteFillObject}, style]}>
+      <Animated.Image source={icon.path} style={[styles.leftIcon]} />
     </Animated.View>
   );
 };

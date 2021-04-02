@@ -21,7 +21,7 @@ import {
 const App = () => {
   return (
     <SafeAreaView style={{flex: 1}}>
-      <Carousel />
+      <WhatsApp />
     </SafeAreaView>
   );
 };
